@@ -15,4 +15,6 @@ The top toolbar has four glass pills:
 
 Press Esc or click outside an open panel to dismiss it. Pressing the search shortcut again also closes search.
 
+Move search by dragging the empty space around the search field or the Applications heading. It snaps to the desktop’s vertical center line when close, stays inside the desktop, and remembers its position while the preview is running.
+
 The dock and search share the same mock apps. Opening one emits `launched` and prints its name. The clock and calendar use local time; quick controls update preview state, and system actions are logged. The preview does not change host settings or power state.

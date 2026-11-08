@@ -120,9 +120,13 @@ Item {
 
         readonly property real radius: 22
         readonly property real topMargin: Math.max(launcher.topInset, 16, Math.min(52, launcher.height * 0.085))
+        readonly property real centeredX: (launcher.width - width) / 2
+        property real horizontalOffset: 0
+        property real verticalOffset: 0
 
-        anchors.horizontalCenter: parent.horizontalCenter
-        y: topMargin - (1 - opacity) * 8
+        x: Math.max(16, Math.min(launcher.width - width - 16, centeredX + horizontalOffset))
+        y: Math.max(topMargin, Math.min(launcher.height - height - 16,
+                                       topMargin + verticalOffset)) - (1 - opacity) * 8
         width: Math.min(600, launcher.width - 32)
         height: Math.min(444, launcher.height - topMargin - 16)
         opacity: launcher.opened ? 1 : 0
@@ -162,6 +166,52 @@ Item {
         MouseArea {
             anchors.fill: parent
             acceptedButtons: Qt.AllButtons
+        }
+
+        // Empty header space and the section heading act as a drag handle.
+        // The input and close button above this area keep their usual gestures.
+        MouseArea {
+            id: panelDrag
+
+            property point pressPosition
+            property point startPosition
+            property bool centerSnapped: false
+            property bool moving: false
+
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: header.height + resultHeading.height
+            cursorShape: moving ? Qt.ClosedHandCursor : Qt.ArrowCursor
+            preventStealing: true
+
+            onPressed: mouse => {
+                moving = false;
+                pressPosition = mapToItem(launcher, mouse.x, mouse.y);
+                startPosition = Qt.point(panel.x, panel.y);
+                centerSnapped = Math.abs(panel.x - panel.centeredX) < 1;
+            }
+            onPositionChanged: mouse => {
+                if (!pressed)
+                    return;
+
+                const position = mapToItem(launcher, mouse.x, mouse.y);
+                const rawX = startPosition.x + position.x - pressPosition.x;
+                const rawY = startPosition.y + position.y - pressPosition.y;
+                const distance = Math.abs(rawX - panel.centeredX);
+                // A wider release threshold avoids jitter at the snap boundary.
+                centerSnapped = distance <= (centerSnapped ? 24 : 14);
+                const clampedX = Math.max(16, Math.min(launcher.width - panel.width - 16, rawX));
+                panel.horizontalOffset = centerSnapped ? 0 : clampedX - panel.centeredX;
+                panel.verticalOffset = Math.max(panel.topMargin,
+                    Math.min(launcher.height - panel.height - 16, rawY)) - panel.topMargin;
+                if (panel.x !== startPosition.x || panel.y !== startPosition.y)
+                    moving = true;
+            }
+            onReleased: {
+                moving = false;
+                search.forceActiveFocus(Qt.MouseFocusReason);
+            }
+            onCanceled: moving = false
         }
 
         Item {
