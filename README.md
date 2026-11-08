@@ -4,6 +4,8 @@ From this directory, run `qml Preview.qml` with Qt 6 on your path.
 
 `Preview.qml` assembles the desktop. The `dock/` folder contains the dock and its icons, `launcher/` contains app search, and `toolbar/` contains the top bar and its panels. The `shared/` folder holds the glass surface, app catalog, app tile, and keycap.
 
+The preview opens on a minimal login screen with an illustrated profile, local date and time, and password field. Enter any nonempty password and press Enter or the arrow to open the desktop. Sleep, Restart, and Shut Down show preview feedback and log the action. **System → Lock** returns to login and clears the password. These are mock interactions, not system authentication. The `login/` folder contains the screen and avatar; `LoginScreen.userName` sets the display name.
+
 To lint the preview and all component folders, run `find . -name '*.qml' -exec qmllint --max-warnings 0 {} +`.
 
 The top toolbar has four glass pills:

@@ -3,6 +3,7 @@ import QtQuick.Window
 import "dock"
 import "launcher"
 import "toolbar"
+import "login"
 
 Window {
     id: preview
@@ -16,6 +17,14 @@ Window {
     color: "#121317"
 
     property Item previousFocus: null
+    property bool locked: true
+
+    function lockScreen() {
+        toolbar.closePanel();
+        launcher.opened = false;
+        previousFocus = null;
+        locked = true;
+    }
 
     function openLauncher(source: Item) {
         const panelTrigger = toolbar.closePanel();
@@ -35,6 +44,7 @@ Window {
         sequence: "Ctrl+K"
         // Keep search available while a toolbar popup has focus.
         context: Qt.ApplicationShortcut
+        enabled: !preview.locked
         autoRepeat: false
         onActivated: launcher.opened ? preview.closeLauncher() : preview.openLauncher(null)
     }
@@ -94,7 +104,7 @@ Window {
         anchors.centerIn: parent
         anchors.verticalCenterOffset: -26
         spacing: 7
-        opacity: launcher.opened ? 0 : 1
+        opacity: launcher.opened || preview.locked ? 0 : 1
 
         Behavior on opacity {
             NumberAnimation { duration: 150 }
@@ -122,7 +132,8 @@ Window {
         id: dock
 
         backdrop: wallpaper
-        enabled: !launcher.opened
+        visible: !preview.locked
+        enabled: !launcher.opened && !preview.locked
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 16
@@ -139,9 +150,15 @@ Window {
         anchors.rightMargin: 16
         backdrop: wallpaper
         searchShortcut: launcherShortcut.nativeText
-        enabled: !launcher.opened
+        visible: !preview.locked
+        enabled: !launcher.opened && !preview.locked
         onSearchRequested: preview.openLauncher(searchButton)
-        onSystemAction: action => console.log("System action:", action)
+        onSystemAction: action => {
+            if (action === "lock")
+                preview.lockScreen();
+            else
+                console.log("System action:", action);
+        }
     }
 
     Launcher {
@@ -154,5 +171,16 @@ Window {
         applications: dock.applications
         onDismissed: preview.closeLauncher()
         onLaunched: appData => console.log("Launched:", appData.name)
+    }
+
+    LoginScreen {
+        anchors.fill: parent
+        backdrop: wallpaper
+        locked: preview.locked
+        onUnlocked: {
+            preview.locked = false;
+            toolbar.searchButton.forceActiveFocus(Qt.OtherFocusReason);
+        }
+        onSystemAction: action => console.log("System action:", action)
     }
 }
