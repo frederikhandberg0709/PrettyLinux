@@ -201,7 +201,7 @@ Item {
 
         objectName: "toolbarSystem"
         anchors.right: parent.right
-        width: height + 4
+        width: height
         leftPadding: 0
         rightPadding: 0
         Accessible.name: "System menu"
