@@ -228,17 +228,17 @@ Item {
         parent: toolbar
         x: !trigger ? 0 : trigger === clockPill
             ? trigger.x + (trigger.width - width) / 2 : trigger.x + trigger.width - width
-        y: toolbar.height + 9
+        y: toolbar.height + 9 - (1 - opacity) * 8
         width: trigger === systemPill ? 220 : 292
         padding: 14
         focus: true
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
 
         enter: Transition {
-            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 130; easing.type: Easing.OutCubic }
+            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 150; easing.type: Easing.OutCubic }
         }
         exit: Transition {
-            NumberAnimation { property: "opacity"; to: 0; duration: 100; easing.type: Easing.InCubic }
+            NumberAnimation { property: "opacity"; to: 0; duration: 150; easing.type: Easing.OutCubic }
         }
 
         onClosed: {
