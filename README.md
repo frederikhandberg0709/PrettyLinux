@@ -19,4 +19,14 @@ Press Esc or click outside an open panel to dismiss it. Pressing the search shor
 
 Move search by dragging the empty space around the search field or the Applications heading. It snaps to the desktop’s vertical center line when close, stays inside the desktop, and remembers its position while the preview is running.
 
-The dock and search share the same mock apps. Opening one emits `launched` and prints its name. The clock and calendar use local time; quick controls update preview state, and system actions are logged. The preview does not change host settings or power state.
+The dock and search share the same mock apps. Opening one emits `launched`, prints its name, and creates a new mock window, including when the app is already running. Each window has its own identity, editable content, and stacking order. Drag its title bar to move it, use **+** to open another instance, or **×** to close it. Dock running dots reflect open windows.
+
+The **▣** button beside Search opens the window switcher. Each card shows a live thumbnail of one window, its title, and app. Two Browser windows are open initially to demonstrate choosing between instances. Click a card or use ← / → and Enter; Esc or clicking outside cancels. The row scrolls when more windows are open than fit on screen.
+
+While the preview has focus, hold **Alt** and press **Tab** to cycle through windows in most-recently-used order. Add **Shift** to go backward and release Alt to activate the selected window. On macOS, use **Option-Tab**: macOS reserves Command-Tab for host applications. The preview also registers **Ctrl+Tab** (Command-Tab on macOS) for the eventual desktop integration. Losing application focus or locking cancels the switcher.
+
+`windows/` contains the window model, mock desktop windows, and switcher. Thumbnails sample the actual QML window items, including edits, rather than static app images. Linux integration still needs a compositor window list, stable toplevel IDs, permitted window capture, activation requests, and global shortcut handling; the preview does not capture or control real host windows.
+
+The clock and calendar use local time; quick controls update preview state, and system actions are logged. The preview does not change host settings or power state.
+
+Run the window-switcher interaction and integration tests with `qmltestrunner -platform offscreen -input tests`.

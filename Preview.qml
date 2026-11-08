@@ -1,9 +1,13 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Window
 import "dock"
 import "launcher"
 import "toolbar"
 import "login"
+import "windows"
+import "shared"
 
 Window {
     id: preview
@@ -20,6 +24,7 @@ Window {
     property bool locked: true
 
     function lockScreen() {
+        switcher.cancel();
         toolbar.closePanel();
         launcher.opened = false;
         previousFocus = null;
@@ -27,9 +32,63 @@ Window {
     }
 
     function openLauncher(source: Item) {
+        switcher.cancel();
         const panelTrigger = toolbar.closePanel();
         previousFocus = source || panelTrigger || activeFocusItem;
         launcher.opened = true;
+    }
+
+    function openSwitcher(reverse: bool, modifier: int) {
+        if (!switcher.opened) {
+            const trigger = toolbar.closePanel();
+            previousFocus = launcher.opened ? toolbar.searchButton : (trigger || activeFocusItem);
+            launcher.opened = false;
+            switcher.windows = desktop.orderedWindows();
+        }
+        switcher.begin(reverse, modifier);
+    }
+
+    function restoreFocus() {
+        (previousFocus || toolbar.searchButton).forceActiveFocus(Qt.OtherFocusReason);
+        previousFocus = null;
+    }
+
+    onActiveChanged: if (!active) switcher.cancel()
+
+    WindowStore {
+        id: windowStore
+        objectName: "windowStore"
+        applications: catalog.entries
+    }
+
+    AppCatalog { id: catalog }
+
+    Shortcut {
+        sequence: "Alt+Tab"
+        context: Qt.ApplicationShortcut
+        enabled: !preview.locked
+        onActivated: preview.openSwitcher(false, Qt.Key_Alt)
+    }
+
+    Shortcut {
+        sequences: ["Alt+Shift+Tab", "Alt+Shift+Backtab"]
+        context: Qt.ApplicationShortcut
+        enabled: !preview.locked
+        onActivated: preview.openSwitcher(true, Qt.Key_Alt)
+    }
+
+    Shortcut {
+        sequence: "Ctrl+Tab"
+        context: Qt.ApplicationShortcut
+        enabled: !preview.locked
+        onActivated: preview.openSwitcher(false, Qt.Key_Control)
+    }
+
+    Shortcut {
+        sequences: ["Ctrl+Shift+Tab", "Ctrl+Shift+Backtab"]
+        context: Qt.ApplicationShortcut
+        enabled: !preview.locked
+        onActivated: preview.openSwitcher(true, Qt.Key_Control)
     }
 
     function closeLauncher() {
@@ -104,7 +163,7 @@ Window {
         anchors.centerIn: parent
         anchors.verticalCenterOffset: -26
         spacing: 7
-        opacity: launcher.opened || preview.locked ? 0 : 1
+        opacity: launcher.opened || preview.locked || windowStore.entries.count > 0 ? 0 : 1
 
         Behavior on opacity {
             NumberAnimation { duration: 150 }
@@ -128,15 +187,59 @@ Window {
         }
     }
 
+    Item {
+        id: desktop
+        anchors.fill: parent
+        anchors.topMargin: 64
+        anchors.bottomMargin: 106
+        visible: !preview.locked
+        enabled: !launcher.opened && !switcher.opened && !preview.locked
+
+        function orderedWindows(): var {
+            const result = [];
+            for (const id of windowStore.recentIds) {
+                for (let i = 0; i < windowViews.count; ++i) {
+                    const view = windowViews.itemAt(i) as DesktopWindow;
+                    if (view && view.windowData.windowId === id)
+                        result.push({ windowId: id, app: view.windowData.app, title: view.windowData.title, source: view });
+                }
+            }
+            return result;
+        }
+
+        Repeater {
+            id: windowViews
+            model: windowStore.entries
+            delegate: DesktopWindow {
+                required property int windowId
+                required property var app
+                required property string title
+                required property int ordinal
+                windowData: ({ windowId: windowId, app: app, title: title, ordinal: ordinal })
+                width: Math.min(580, desktop.width - 32)
+                height: Math.min(350, desktop.height - 12)
+                x: Math.max(0, Math.min(desktop.width - width, (desktop.width - width) / 2 + (ordinal % 4 - 1.5) * 36))
+                y: Math.max(0, Math.min(desktop.height - height, (ordinal % 4) * 13))
+                z: windowStore.recentIds.length - windowStore.recentIds.indexOf(windowId)
+                active: windowStore.activeId === windowId
+                onActivated: windowStore.activate(windowId)
+                onCloseRequested: windowStore.closeWindow(windowId)
+                onNewRequested: windowStore.createWindow(app, "")
+            }
+        }
+    }
+
     Dock {
         id: dock
 
+        applications: catalog.entries.map(app => Object.assign({}, app, { running: windowStore.isRunning(app.name) }))
         backdrop: wallpaper
         visible: !preview.locked
-        enabled: !launcher.opened && !preview.locked
+        enabled: !launcher.opened && !switcher.opened && !preview.locked
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 16
+        onLaunched: appData => windowStore.createWindow(appData, "")
     }
 
     DesktopToolbar {
@@ -151,8 +254,9 @@ Window {
         backdrop: wallpaper
         searchShortcut: launcherShortcut.nativeText
         visible: !preview.locked
-        enabled: !launcher.opened && !preview.locked
+        enabled: !launcher.opened && !switcher.opened && !preview.locked
         onSearchRequested: preview.openLauncher(searchButton)
+        onWindowsRequested: preview.openSwitcher(false, 0)
         onSystemAction: action => {
             if (action === "lock")
                 preview.lockScreen();
@@ -170,7 +274,26 @@ Window {
         topInset: toolbar.y + toolbar.height + 9
         applications: dock.applications
         onDismissed: preview.closeLauncher()
-        onLaunched: appData => console.log("Launched:", appData.name)
+        onLaunched: appData => {
+            windowStore.createWindow(appData, "");
+            console.log("Launched:", appData.name);
+        }
+    }
+
+    WindowSwitcher {
+        id: switcher
+        objectName: "windowSwitcher"
+        anchors.fill: parent
+        backdrop: wallpaper
+        // Capture sources only when opening, preserving MRU order throughout a cycle.
+        onActivated: windowId => {
+            windowStore.activate(windowId);
+            const selected = desktop.orderedWindows().find(entry => entry.windowId === windowId);
+            if (selected)
+                selected.source.forceActiveFocus(Qt.OtherFocusReason);
+            preview.previousFocus = null;
+        }
+        onDismissed: preview.restoreFocus()
     }
 
     LoginScreen {

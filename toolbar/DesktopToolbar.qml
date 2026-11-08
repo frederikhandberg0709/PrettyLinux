@@ -24,6 +24,7 @@ Item {
     property date now: new Date()
 
     signal searchRequested()
+    signal windowsRequested()
     signal systemAction(string action)
 
     function closePanel(): Item {
@@ -131,6 +132,21 @@ Item {
                 visible: !toolbar.compact && label.length > 0
                 hovered: searchPill.hovered
             }
+        }
+    }
+
+    Pill {
+        id: windowsPill
+        objectName: "toolbarWindows"
+        anchors.left: searchPill.right
+        anchors.leftMargin: 8
+        width: height
+        Accessible.name: "Switch windows"
+        onClicked: toolbar.windowsRequested()
+        contentItem: PillText {
+            text: "▣"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
         }
     }
 
