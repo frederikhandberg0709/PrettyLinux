@@ -134,6 +134,8 @@ Item {
 
                     baseSize: dock.baseIconSize
                     indicatorSpace: dock.indicatorSpace
+                    leftHitPadding: index > 0 ? dock.iconSpacing / 2 : 0
+                    rightHitPadding: index < dock.applications.length - 1 ? dock.iconSpacing / 2 : 0
                     appData: modelData
                     magnificationScale: dock.scaleAtDistance(index - dock.focusIndex)
                     backdrop: dock.backdrop

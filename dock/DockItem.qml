@@ -9,6 +9,8 @@ Item {
     property point backdropOrigin
     property real baseSize: 48
     property real indicatorSpace: 11
+    property real leftHitPadding: 0
+    property real rightHitPadding: 0
     property real magnificationScale: 1
     readonly property bool isPressed: tap.pressed || keyboardPressed
     readonly property real finalScale: magnifiedIcon.scale * tile.scale
@@ -45,12 +47,10 @@ Item {
     }
 
     Item {
-        id: iconHitArea
-
-        width: dockItem.implicitWidth
-        height: width
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: parent.top
+        // Hover and taps share the icon slot, including its indicator and half of each adjacent gap.
+        anchors.fill: parent
+        anchors.leftMargin: -dockItem.leftHitPadding
+        anchors.rightMargin: -dockItem.rightHitPadding
 
         HoverHandler {
             id: iconHover
@@ -63,39 +63,40 @@ Item {
             gesturePolicy: TapHandler.ReleaseWithinBounds
             onTapped: dockItem.launched()
         }
+    }
 
-        Item {
-            id: magnifiedIcon
+    Item {
+        id: magnifiedIcon
 
-            width: dockItem.baseSize
-            height: width
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottom: parent.bottom
-            transformOrigin: Item.Bottom
-            scale: dockItem.magnificationScale
+        width: dockItem.baseSize
+        height: width
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.alignWhenCentered: false
+        anchors.bottom: indicator.top
+        transformOrigin: Item.Bottom
+        scale: dockItem.magnificationScale
+
+        Behavior on scale {
+            NumberAnimation {
+                duration: 120
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        AppTile {
+            id: tile
+
+            anchors.fill: parent
+            appData: dockItem.appData
+            scale: dockItem.isPressed ? 0.90 : 1.0
+            border.width: dockItem.activeFocus ? 1 : 0
+            border.color: "#ffffff"
 
             Behavior on scale {
-                NumberAnimation {
-                    duration: 120
-                    easing.type: Easing.OutCubic
-                }
-            }
-
-            AppTile {
-                id: tile
-
-                anchors.fill: parent
-                appData: dockItem.appData
-                scale: dockItem.isPressed ? 0.90 : 1.0
-                border.width: dockItem.activeFocus ? 1 : 0
-                border.color: "#ffffff"
-
-                Behavior on scale {
-                    SpringAnimation {
-                        spring: 4.0
-                        damping: 0.29
-                        epsilon: 0.001
-                    }
+                SpringAnimation {
+                    spring: 4.0
+                    damping: 0.29
+                    epsilon: 0.001
                 }
             }
         }
@@ -104,8 +105,9 @@ Item {
     GlassSurface {
         id: tooltip
 
-        anchors.horizontalCenter: iconHitArea.horizontalCenter
-        anchors.bottom: iconHitArea.top
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.alignWhenCentered: false
+        anchors.bottom: parent.top
         anchors.bottomMargin: 4 + 4 * tooltip.opacity
         width: tooltipLabel.implicitWidth + 20
         height: tooltipLabel.implicitHeight + 10
@@ -141,7 +143,7 @@ Item {
 
         width: dockItem.width
         height: dockItem.indicatorSpace
-        anchors.top: iconHitArea.bottom
+        anchors.bottom: parent.bottom
 
         Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
