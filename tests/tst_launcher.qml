@@ -27,6 +27,20 @@ Item {
             dismissSpy.clear();
         }
 
+        function test_a_initialTopPadding() {
+            const list = findChild(launcher, "launcherResults");
+            const search = findChild(launcher, "launcherSearch");
+            tryCompare(search.parent.parent, "opacity", 1);
+            tryCompare(list, "contentY", list.originY - list.topMargin);
+            search.text = "web";
+            tryCompare(search.parent.parent, "height", 129);
+            tryCompare(list, "contentY", list.originY - list.topMargin);
+            launcher.opened = false;
+            launcher.opened = true;
+            tryCompare(search.parent.parent, "height", 444);
+            tryCompare(list, "contentY", list.originY - list.topMargin);
+        }
+
         function test_elasticScroll() {
             const list = findChild(launcher, "launcherResults");
             const search = findChild(launcher, "launcherSearch");
@@ -91,6 +105,28 @@ Item {
             mouseClick(list, list.width - 2, list.topMargin + 20);
             compare(launchSpy.count, 2);
             compare(dismissSpy.count, 2);
+        }
+
+        function test_keyboardScrollBreathingRoom() {
+            const list = findChild(launcher, "launcherResults");
+            const search = findChild(launcher, "launcherSearch");
+            tryCompare(search.parent.parent, "height", 444);
+            for (let i = 0; i < 7; ++i)
+                keyClick(Qt.Key_Down);
+            compare(launcher.selectedIndex, 7);
+            tryVerify(() => list.currentItem.y + list.currentItem.height - list.contentY <= list.height - 39.5);
+            for (let i = 0; i < 4; ++i)
+                keyClick(Qt.Key_Up);
+            compare(launcher.selectedIndex, 3);
+            tryVerify(() => list.currentItem.y - list.contentY >= 39.5);
+            // Wrapping still reveals the first/last row within the scroll bounds.
+            launcher.selectedIndex = 0;
+            keyClick(Qt.Key_Up);
+            compare(launcher.selectedIndex, launcher.results.length - 1);
+            tryVerify(() => list.currentItem.y + list.currentItem.height - list.contentY <= list.height);
+            keyClick(Qt.Key_Down);
+            compare(launcher.selectedIndex, 0);
+            tryCompare(list, "contentY", list.originY - list.topMargin);
         }
 
         function test_commandsAndApps() {

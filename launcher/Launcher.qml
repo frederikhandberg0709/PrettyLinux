@@ -29,7 +29,7 @@ Item {
         if (opened) {
             search.clear();
             selectedIndex = results.length ? 0 : -1;
-            list.positionViewAtBeginning();
+            list.resetToTop();
             search.forceActiveFocus(Qt.ShortcutFocusReason);
         }
     }
@@ -37,7 +37,7 @@ Item {
     onResultsChanged: {
         search.activationKey = 0;
         selectedIndex = results.length ? 0 : -1;
-        list.positionViewAtBeginning();
+        list.resetToTop();
     }
 
     function matchEntries(query: string): var {
@@ -351,6 +351,13 @@ Item {
             id: list
             objectName: "launcherResults"
 
+            function resetToTop() {
+                cancelFlick();
+                forceLayout();
+                // positionViewAtBeginning aligns the first row, excluding its margin.
+                contentY = originY - topMargin;
+            }
+
             property Item hoveredRow: null
             property Item pressedRow: null
             property real leadingFade: contentY > originY + 0.5 ? 1 : 0
@@ -384,6 +391,10 @@ Item {
             keyNavigationEnabled: false
             currentIndex: launcher.selectedIndex
             model: launcher.results
+            // Keep keyboard selection clear of the translucent edge fades.
+            preferredHighlightBegin: Math.min(40, Math.max(0, (height - 43) / 2))
+            preferredHighlightEnd: height - preferredHighlightBegin
+            highlightRangeMode: ListView.ApplyRange
             highlightMoveDuration: 150
             highlightMoveVelocity: -1
             highlightResizeDuration: 0
@@ -401,7 +412,7 @@ Item {
 
                     anchors.fill: parent
                     anchors.leftMargin: 11
-                    anchors.rightMargin: 11 + (list.interactive ? 9 : 0)
+                    anchors.rightMargin: 11
                     anchors.bottomMargin: 3
                     radius: 9
                     color: pressed ? "#779b7cf3"
@@ -417,14 +428,6 @@ Item {
                         ColorAnimation { duration: selection.pressed ? 45 : 100 }
                     }
                 }
-            }
-
-            ScrollBar.vertical: ScrollBar {
-                policy: ScrollBar.AsNeeded
-                parent: list.parent
-                x: list.x + list.width - width - 11
-                y: list.y + 8
-                height: list.height - 20
             }
 
             delegate: Item {
@@ -445,7 +448,7 @@ Item {
 
                 Item {
                     x: 11
-                    width: entry.width - 22 - (list.interactive ? 9 : 0)
+                    width: entry.width - 22
                     height: entry.height
 
                     Rectangle {
