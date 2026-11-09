@@ -55,6 +55,15 @@ Window {
         locked = true;
     }
 
+    function performSystemAction(action: string) {
+        if (action === "lock")
+            lockScreen();
+        else if (action === "settings")
+            openSettings();
+        else
+            console.log("System action:", action);
+    }
+
     function openLauncher(source: Item) {
         switcher.cancel();
         const panelTrigger = toolbar.closePanel();
@@ -290,14 +299,7 @@ Window {
         enabled: !launcher.opened && !switcher.opened && !preview.locked
         onSearchRequested: preview.openLauncher(searchButton)
         onWindowsRequested: preview.openSwitcher(false, 0)
-        onSystemAction: action => {
-            if (action === "lock")
-                preview.lockScreen();
-            else if (action === "settings")
-                preview.openSettings();
-            else
-                console.log("System action:", action);
-        }
+        onSystemAction: action => preview.performSystemAction(action)
     }
 
     Launcher {
@@ -309,6 +311,7 @@ Window {
         topInset: toolbar.y + toolbar.height + 9
         applications: dock.applications
         onDismissed: preview.closeLauncher()
+        onSystemAction: action => preview.performSystemAction(action)
         onLaunched: appData => {
             windowStore.createWindow(appData, "");
             console.log("Launched:", appData.name);

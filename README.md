@@ -2,7 +2,7 @@
 
 From this directory, run `qml Preview.qml` with Qt 6 on your path.
 
-`Preview.qml` assembles the desktop. The `dock/` folder contains the dock and its icons, `launcher/` contains app search, and `toolbar/` contains the top bar and its panels. The `shared/` folder holds the glass surface, app catalog, app tile, and keycap.
+`Preview.qml` assembles the desktop. The `dock/` folder contains the dock and its icons, `launcher/` contains app and command search, and `toolbar/` contains the top bar and its panels. The `shared/` folder holds the glass surface, app catalog, app tile, and keycap.
 
 The preview opens on a minimal login screen with an illustrated profile, local date and time, and password field. Enter any nonempty password and press Enter or the arrow to open the desktop. Sleep, Restart, and Shut Down show preview feedback and log the action. **System → Lock** returns to login and clears the password. These are mock interactions, not system authentication. The `login/` folder contains the screen and avatar; `LoginScreen.userName` sets the display name.
 
@@ -10,7 +10,7 @@ To lint the preview and all component folders, run `find . -name '*.qml' -exec q
 
 The top toolbar defaults to floating glass pills:
 
-- **Search** opens the app launcher. You can also press **Ctrl+K** (or **⌘K**, depending on the host) while the preview has focus. Search by name, alias, or abbreviation, such as `web` for Browser or `trm` for Terminal. Use ↑ and ↓ to select a result, then press Enter or click it.
+- **Search** opens app and command search. The panel smoothly resizes to its results and scrolls longer lists. Search also includes Settings, Lock, Sleep, Restart, and Shut down, using the same actions as the System menu. You can also press **Ctrl+K** (or **⌘K**, depending on the host) while the preview has focus. Search by name, alias, or abbreviation, such as `web` for Browser or `trm` for Terminal. Use ↑ and ↓ to select a result, then press Enter or click it.
 - **Date and time** shows the local clock. Click it to open a calendar and browse months.
 - **Control Center** shows Wi-Fi, volume, and battery at a glance. Open it to toggle Wi-Fi or Bluetooth, adjust volume and brightness, and see the battery percentage.
 - **System** contains Settings, Lock, Sleep, Restart, and Shut Down.
@@ -19,7 +19,7 @@ The top toolbar defaults to floating glass pills:
 
 Press Esc or click outside an open panel to dismiss it. Pressing the search shortcut again also closes search.
 
-Move search by dragging the empty space around the search field or the Applications heading. It snaps to the desktop’s vertical center line when close, stays inside the desktop, and remembers its position while the preview is running.
+Move search by dragging the empty space around the search field. It snaps to the desktop’s vertical center line when close, stays inside the desktop, and remembers its position while the preview is running.
 
 The dock and search share the same mock apps. Opening one emits `launched`, prints its name, and creates a new mock window, including when the app is already running. Each window has its own identity, editable content, and stacking order. Drag its title bar to move it, use **+** to open another instance, or **×** to close it. Dock running dots reflect open windows.
 

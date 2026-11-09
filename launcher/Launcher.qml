@@ -13,11 +13,14 @@ Item {
     property Item backdrop: null
     property bool opened: false
     property real topInset: 0
-    readonly property var results: matchApps(search.text)
+    readonly property var results: matchEntries(search.text)
     property int selectedIndex: 0
 
     signal dismissed()
     signal launched(var appData)
+    signal systemAction(string action)
+
+    CommandCatalog { id: commands }
 
     visible: opened || panel.opacity > 0
     enabled: opened
@@ -37,15 +40,16 @@ Item {
         list.positionViewAtBeginning();
     }
 
-    function matchApps(query: string): var {
+    function matchEntries(query: string): var {
+        const entries = applications.concat(commands.entries);
         const normalized = query.trim().toLowerCase();
         if (!normalized)
-            return applications;
+            return entries;
 
         const terms = normalized.split(/\s+/);
         const matches = [];
-        for (let i = 0; i < applications.length; ++i) {
-            const app = applications[i];
+        for (let i = 0; i < entries.length; ++i) {
+            const app = entries[i];
             const name = app.name.toLowerCase();
             const aliases = (app.keywords || "").toLowerCase().split(/\s+/);
             let score = 0;
@@ -96,7 +100,10 @@ Item {
 
         const app = results[index];
         dismissed();
-        launched(app);
+        if (app.action)
+            systemAction(app.action);
+        else
+            launched(app);
     }
 
     Rectangle {
@@ -128,7 +135,14 @@ Item {
         y: Math.max(topMargin, Math.min(launcher.height - height - 16,
                                        topMargin + verticalOffset)) - (1 - opacity) * 8
         width: Math.min(600, launcher.width - 32)
-        height: Math.min(444, launcher.height - topMargin - 16)
+        // Fit complete rows until the available desktop space requires scrolling.
+        height: Math.min(444, launcher.height - topMargin - 16,
+                         searchHeader.height + 8 + (launcher.results.length ? launcher.results.length * 43 : 86) + 12)
+
+        Behavior on height {
+            enabled: launcher.opened
+            NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+        }
         opacity: launcher.opened ? 1 : 0
 
         Behavior on opacity {
@@ -168,7 +182,7 @@ Item {
             acceptedButtons: Qt.AllButtons
         }
 
-        // Empty header space and the section heading act as a drag handle.
+        // Empty header space acts as a drag handle.
         // The input and close button above this area keep their usual gestures.
         MouseArea {
             id: panelDrag
@@ -180,7 +194,7 @@ Item {
 
             anchors.left: parent.left
             anchors.right: parent.right
-            height: header.height + resultHeading.height
+            height: searchHeader.height
             cursorShape: moving ? Qt.ClosedHandCursor : Qt.ArrowCursor
             preventStealing: true
 
@@ -215,7 +229,7 @@ Item {
         }
 
         Item {
-            id: header
+            id: searchHeader
 
             anchors.left: parent.left
             anchors.right: parent.right
@@ -247,7 +261,7 @@ Item {
                 selectionColor: "#7057b4"
                 selectedTextColor: "#ffffff"
                 font.pixelSize: 21
-                Accessible.name: "Search applications"
+                Accessible.name: "Search apps and commands"
 
                 onActiveFocusChanged: {
                     if (!activeFocus)
@@ -296,7 +310,7 @@ Item {
                     anchors.leftMargin: 2
                     anchors.verticalCenter: parent.verticalCenter
                     visible: search.displayText.length === 0
-                    text: "Search applications…"
+                    text: "Search apps and commands…"
                     color: "#a8adbf"
                     font: search.font
                     Accessible.ignored: true
@@ -333,35 +347,6 @@ Item {
             }
         }
 
-        Item {
-            id: resultHeading
-
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: header.bottom
-            height: 33
-
-            Text {
-                anchors.left: parent.left
-                anchors.leftMargin: 22
-                anchors.verticalCenter: parent.verticalCenter
-                text: "APPLICATIONS"
-                color: "#b7bbd0"
-                font.pixelSize: 10
-                font.weight: Font.DemiBold
-                font.letterSpacing: 1.5
-            }
-
-            Text {
-                anchors.right: parent.right
-                anchors.rightMargin: 22
-                anchors.verticalCenter: parent.verticalCenter
-                text: launcher.results.length === 1 ? "1 app" : launcher.results.length + " apps"
-                color: "#a3a9bd"
-                font.pixelSize: 11
-            }
-        }
-
         ListView {
             id: list
 
@@ -370,7 +355,8 @@ Item {
 
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.top: resultHeading.bottom
+            anchors.top: searchHeader.bottom
+            anchors.topMargin: 8
             anchors.bottom: parent.bottom
             anchors.leftMargin: 11
             anchors.rightMargin: 11
@@ -553,7 +539,7 @@ Item {
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "No matching apps"
+                text: "No matching results"
                 color: "#f0eff9"
                 font.pixelSize: 15
                 font.weight: Font.DemiBold
