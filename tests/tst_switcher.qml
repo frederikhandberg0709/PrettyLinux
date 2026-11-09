@@ -98,6 +98,47 @@ Item {
             compare(store.activeId, 3);
         }
 
+        function test_arrowScrolling() {
+            switcher.windows = Array.from({ length: 9 }, (_, index) => ({
+                windowId: index, app: catalog.entries[1], title: "Window " + index, source: null
+            }));
+            switcher.begin(false, 0);
+            const list = findChild(switcher, "windowSwitcherList");
+            verify(list !== null);
+            wait(200);
+            const start = list.contentX;
+            // Move beyond the four visible cards, then observe an in-flight frame.
+            for (let i = 0; i < 4; ++i)
+                keyClick(Qt.Key_Right);
+            compare(switcher.selectedIndex, 4);
+            waitForRendering(list);
+            wait(40);
+            const intermediate = list.contentX;
+            verify(intermediate > start);
+            wait(200);
+            verify(list.contentX > intermediate);
+            verify(list.currentItem.x >= list.contentX - 1);
+            verify(list.currentItem.x + list.currentItem.width <= list.contentX + list.width + 1);
+
+            const end = list.contentX;
+            for (let i = 0; i < 4; ++i)
+                keyClick(Qt.Key_Left);
+            compare(switcher.selectedIndex, 0);
+            wait(40);
+            verify(list.contentX < end);
+            verify(list.contentX > start);
+            tryVerify(() => Math.abs(list.contentX - start) < 1);
+
+            // Wrapping and reversing mid-animation must follow the latest selection.
+            keyClick(Qt.Key_Left);
+            compare(switcher.selectedIndex, 8);
+            wait(40);
+            verify(list.contentX > start);
+            keyClick(Qt.Key_Right);
+            compare(switcher.selectedIndex, 0);
+            tryVerify(() => Math.abs(list.contentX - start) < 1);
+        }
+
         function test_previewIntegration() {
             const component = Qt.createComponent("../Preview.qml");
             compare(component.status, Component.Ready, component.errorString());

@@ -80,7 +80,12 @@ FocusScope {
         }
     }
 
-    onSelectedIndexChanged: list.positionViewAtIndex(selectedIndex, ListView.Contain)
+    onOpenedChanged: {
+        if (opened)
+            list.revealSelection(false);
+        else
+            scrollAnimation.stop();
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -129,8 +134,28 @@ FocusScope {
 
         ListView {
             id: list
+            objectName: "windowSwitcherList"
+            readonly property real cardWidth: Math.min(264, width > 760 ? (width - 30) / 4 : width - 12)
             property real leadingFade: contentX > originX + 0.5 ? 1 : 0
             property real trailingFade: contentX + width < originX + contentWidth - 0.5 ? 1 : 0
+
+            function revealSelection(animated: bool) {
+                scrollAnimation.stop();
+                forceLayout();
+                if (switcher.selectedIndex < 0)
+                    return;
+                if (!animated) {
+                    positionViewAtIndex(switcher.selectedIndex, ListView.Contain);
+                    return;
+                }
+                const selected = itemAtIndex(switcher.selectedIndex);
+                const left = selected ? selected.x : originX + switcher.selectedIndex * (cardWidth + spacing);
+                const target = Math.max(originX, Math.min(originX + Math.max(0, contentWidth - width),
+                                       Math.min(left, Math.max(contentX, left + cardWidth - width))));
+                scrollAnimation.from = contentX;
+                scrollAnimation.to = target;
+                scrollAnimation.start();
+            }
 
             Behavior on leadingFade { NumberAnimation { duration: 120 } }
             Behavior on trailingFade { NumberAnimation { duration: 120 } }
@@ -148,16 +173,28 @@ FocusScope {
             layer.effect: OpacityMask { maskSource: edgeMask }
             model: switcher.session
             currentIndex: switcher.selectedIndex
+            onCurrentIndexChanged: {
+                if (switcher.opened)
+                    revealSelection(true);
+            }
             boundsBehavior: Flickable.StopAtBounds
-            highlightMoveDuration: 120
+            highlightFollowsCurrentItem: false
             keyNavigationEnabled: false
+
+            NumberAnimation {
+                id: scrollAnimation
+                target: list
+                property: "contentX"
+                duration: 160
+                easing.type: Easing.OutCubic
+            }
 
             delegate: Rectangle {
                 id: card
                 required property var modelData
                 required property int index
                 readonly property bool selected: index === switcher.selectedIndex
-                width: Math.min(264, list.width > 760 ? (list.width - 30) / 4 : list.width - 12)
+                width: list.cardWidth
                 height: list.height
                 radius: 14
                 color: selected ? "#34405f" : hover.hovered ? "#252e43" : "#171e2d"
