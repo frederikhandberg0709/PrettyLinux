@@ -10,6 +10,7 @@ Item {
     id: toolbar
 
     property Item backdrop: null
+    property bool menuBar: false
     property string searchShortcut: ""
     property alias searchButton: searchPill
     property bool wifiOn: true
@@ -43,7 +44,19 @@ Item {
         panel.open();
     }
 
-    implicitHeight: 34
+    implicitHeight: menuBar ? 30 : 34
+    onMenuBarChanged: panel.close()
+
+    GlassSurface {
+        anchors.fill: parent
+        visible: toolbar.menuBar
+        radius: 0
+        backdrop: toolbar.backdrop
+        sampleOrigin: Qt.point(toolbar.x - (toolbar.backdrop?.x ?? 0),
+                               toolbar.y - (toolbar.backdrop?.y ?? 0))
+        tintOpacity: 0.64
+        fallbackOpacity: 0.82
+    }
 
     Timer {
         interval: 1000
@@ -66,6 +79,7 @@ Item {
         property real pressScale: down ? 0.95 : 1.0
 
         height: toolbar.height
+        width: implicitWidth
         leftPadding: 12
         rightPadding: 12
         topPadding: 0
@@ -92,6 +106,7 @@ Item {
 
             GlassSurface {
                 anchors.fill: parent
+                visible: !toolbar.menuBar
                 backdrop: toolbar.backdrop
                 sampleOrigin: Qt.point(toolbar.x + pill.x - (toolbar.backdrop?.x ?? 0),
                                        toolbar.y + pill.y - (toolbar.backdrop?.y ?? 0))
@@ -101,7 +116,7 @@ Item {
 
             Rectangle {
                 anchors.fill: parent
-                radius: height / 2
+                radius: toolbar.menuBar ? 5 : height / 2
                 color: pill.down ? "#28ffffff" : pill.selected || pill.hovered ? "#15ffffff" : "transparent"
                 border.color: pill.visualFocus ? toolbar.accent : "transparent"
             }
@@ -118,7 +133,7 @@ Item {
         id: searchPill
 
         objectName: "toolbarSearch"
-        anchors.left: parent.left
+        x: toolbar.menuBar ? systemPill.x + systemPill.width + 4 : 0
         Accessible.name: "Search applications"
         onClicked: toolbar.searchRequested()
 
@@ -138,8 +153,7 @@ Item {
     Pill {
         id: windowsPill
         objectName: "toolbarWindows"
-        anchors.left: searchPill.right
-        anchors.leftMargin: 8
+        x: searchPill.x + searchPill.width + (toolbar.menuBar ? 2 : 8)
         width: height
         Accessible.name: "Switch windows"
         onClicked: toolbar.windowsRequested()
@@ -154,7 +168,7 @@ Item {
         id: clockPill
 
         objectName: "toolbarClock"
-        anchors.horizontalCenter: parent.horizontalCenter
+        x: toolbar.menuBar ? toolbar.width - width - 12 : (toolbar.width - width) / 2
         Accessible.name: dateLabel.text + ", " + timeLabel.text + ", Calendar"
         onClicked: toolbar.togglePanel(clockPill, calendarBody)
 
@@ -185,8 +199,7 @@ Item {
         id: controlPill
 
         objectName: "toolbarControls"
-        anchors.right: systemPill.left
-        anchors.rightMargin: 8
+        x: (toolbar.menuBar ? clockPill.x - 2 : systemPill.x - 8) - width
         Accessible.name: "Control Center, Wi-Fi " + (toolbar.wifiOn ? "on" : "off")
                          + ", volume " + toolbar.volume + "%, battery " + toolbar.battery + "%"
         onClicked: toolbar.togglePanel(controlPill, controlsBody)
@@ -216,7 +229,7 @@ Item {
         id: systemPill
 
         objectName: "toolbarSystem"
-        anchors.right: parent.right
+        x: toolbar.menuBar ? 8 : toolbar.width - width
         width: height
         leftPadding: 0
         rightPadding: 0
@@ -242,8 +255,9 @@ Item {
 
         // Anchor to the toolbar instead of the window overlay.
         parent: toolbar
-        x: !trigger ? 0 : trigger === clockPill
-            ? trigger.x + (trigger.width - width) / 2 : trigger.x + trigger.width - width
+        x: Math.max(8, Math.min(toolbar.width - width - 8,
+            !trigger ? 0 : trigger === clockPill
+                ? trigger.x + (trigger.width - width) / 2 : trigger.x + trigger.width - width))
         y: toolbar.height + 9 - (1 - opacity) * 8
         width: trigger === systemPill ? 220 : 292
         padding: 14

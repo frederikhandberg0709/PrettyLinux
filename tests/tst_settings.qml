@@ -47,6 +47,38 @@ Item {
             compare(dock.anchors.bottomMargin, 28);
             verify(findChild(content, "toolbarGapControl").visible);
 
+            const style = findChild(content, "toolbarStyleControl");
+            style.currentIndex = 1;
+            style.activated(1);
+            compare(toolbar.menuBar, true);
+            compare(toolbar.y, 0);
+            compare(toolbar.x, 0);
+            tryCompare(toolbar, "width", preview.width);
+            compare(toolbar.height, 30);
+            verify(!findChild(content, "toolbarGapControl").visible);
+            const system = findChild(toolbar, "toolbarSystem");
+            const clock = findChild(toolbar, "toolbarClock");
+            verify(system.x < findChild(toolbar, "toolbarSearch").x);
+            verify(clock.x > findChild(toolbar, "toolbarControls").x);
+            system.clicked();
+            const toolbarPanel = findChild(toolbar, "toolbarPanel");
+            tryCompare(toolbarPanel, "opened", true);
+            verify(toolbarPanel.x >= 0);
+            verify(toolbarPanel.x + toolbarPanel.width <= toolbar.width);
+            style.currentIndex = 0;
+            style.activated(0);
+            tryCompare(toolbarPanel, "visible", false);
+            compare(toolbar.y, 8);
+            compare(toolbar.x, 16);
+            compare(toolbar.height, 34);
+            style.currentIndex = 1;
+            style.activated(1);
+            tryCompare(system, "x", 8);
+            compare(system.width, 30);
+            compare(clock.x + clock.width, toolbar.width - 12);
+            verify(findChild(toolbar, "toolbarWindows").x + findChild(toolbar, "toolbarWindows").width
+                < findChild(toolbar, "toolbarControls").x);
+
             store.activate(1);
             preview.openSettings();
             compare(store.entries.count, 5);
@@ -75,7 +107,11 @@ Item {
             compare(restored.magnificationEnabled, false);
             compare(restored.dockGap, 28);
             compare(restored.effectiveToolbarGap, 8);
+            compare(restored.toolbarStyle, "menuBar");
+            compare(findChild(reopened, "toolbar").y, 0);
             restored.reset();
+            compare(restored.toolbarStyle, "pills");
+            compare(findChild(reopened, "toolbar").y, 16);
             compare(restored.dockHeight, 76);
             compare(findChild(reopened, "dock").scaleAtDistance(0), 1.5);
             compare(restored.effectiveToolbarGap, 16);

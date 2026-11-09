@@ -9,6 +9,7 @@ Settings {
     property bool independentGaps: false
     property int dockGap: 16
     property int toolbarGap: 16
+    property string toolbarStyle: "pills"
     readonly property int effectiveToolbarGap: independentGaps ? toolbarGap : dockGap
 
     function reset() {
@@ -17,5 +18,6 @@ Settings {
         independentGaps = false;
         dockGap = 16;
         toolbarGap = 16;
+        toolbarStyle = "pills";
     }
 }

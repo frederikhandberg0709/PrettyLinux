@@ -281,9 +281,10 @@ Window {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.topMargin: desktopPreferences.effectiveToolbarGap
-        anchors.leftMargin: 16
-        anchors.rightMargin: 16
+        menuBar: desktopPreferences.toolbarStyle === "menuBar"
+        anchors.topMargin: menuBar ? 0 : desktopPreferences.effectiveToolbarGap
+        anchors.leftMargin: menuBar ? 0 : 16
+        anchors.rightMargin: menuBar ? 0 : 16
         backdrop: wallpaper
         searchShortcut: launcherShortcut.nativeText
         visible: !preview.locked
