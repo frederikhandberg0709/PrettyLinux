@@ -443,6 +443,28 @@ Item {
         Slider {
             id: slider
 
+            property real animatedPosition: visualPosition
+            readonly property real displayedPosition: sliderPointer.dragging
+                ? visualPosition : animatedPosition
+
+            Behavior on animatedPosition {
+                enabled: sliderPointer.active && !sliderPointer.dragging
+                SmoothedAnimation { duration: 120; velocity: -1 }
+            }
+
+            // Observe the gesture without taking the Slider's pointer grab.
+            PointHandler {
+                id: sliderPointer
+
+                property bool dragging: false
+                acceptedButtons: Qt.LeftButton
+                onActiveChanged: dragging = false
+                onPointChanged: {
+                    if (active && Math.abs(point.position.x - point.pressPosition.x) > 1)
+                        dragging = true;
+                }
+            }
+
             Layout.fillWidth: true
             implicitHeight: 23
             from: 0
@@ -461,7 +483,7 @@ Item {
                 color: "#33ffffff"
 
                 Rectangle {
-                    width: parent.width * slider.visualPosition
+                    width: parent.width * slider.displayedPosition
                     height: parent.height
                     radius: parent.radius
                     color: toolbar.accent
@@ -469,7 +491,7 @@ Item {
             }
 
             handle: Rectangle {
-                x: slider.leftPadding + slider.visualPosition * (slider.availableWidth - width)
+                x: slider.leftPadding + slider.displayedPosition * (slider.availableWidth - width)
                 y: (slider.height - height) / 2
                 implicitWidth: 14
                 implicitHeight: 14
