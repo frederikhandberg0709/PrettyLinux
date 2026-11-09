@@ -349,6 +349,7 @@ Item {
 
         ListView {
             id: list
+            objectName: "launcherResults"
 
             property Item hoveredRow: null
             property Item pressedRow: null
@@ -364,7 +365,15 @@ Item {
             clip: true
             // Keep the icon glyphs inside the viewport during software scrolling.
             layer.enabled: interactive && GraphicsInfo.api === GraphicsInfo.Software
-            boundsBehavior: Flickable.StopAtBounds
+            boundsBehavior: Flickable.DragAndOvershootBounds
+            boundsMovement: Flickable.FollowBoundsBehavior
+            rebound: Transition {
+                NumberAnimation {
+                    properties: "x,y"
+                    duration: 360
+                    easing.type: Easing.OutCubic
+                }
+            }
             interactive: contentHeight > height
             keyNavigationEnabled: false
             currentIndex: launcher.selectedIndex

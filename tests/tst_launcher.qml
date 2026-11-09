@@ -27,6 +27,43 @@ Item {
             dismissSpy.clear();
         }
 
+        function test_elasticScroll() {
+            const list = findChild(launcher, "launcherResults");
+            const search = findChild(launcher, "launcherSearch");
+            tryCompare(search.parent.parent, "height", 444);
+            tryCompare(search.parent.parent, "opacity", 1);
+            verify(list.interactive);
+            list.positionViewAtBeginning();
+            // Pull past the top edge and observe the resisted movement.
+            mousePress(list, list.width / 2, 60);
+            mouseMove(list, list.width / 2, 90, 20);
+            mouseMove(list, list.width / 2, 150, 20);
+            mouseMove(list, list.width / 2, 180, 20);
+            wait(30);
+            verify(list.contentY < list.originY);
+            mouseRelease(list, list.width / 2, 180);
+            tryVerify(() => Math.abs(list.contentY - list.originY) < 0.5);
+            compare(launchSpy.count, 0);
+            compare(actionSpy.count, 0);
+
+            list.positionViewAtEnd();
+            const bottom = list.originY + list.contentHeight - list.height;
+            mousePress(list, list.width / 2, 200);
+            mouseMove(list, list.width / 2, 170, 20);
+            mouseMove(list, list.width / 2, 110, 20);
+            mouseMove(list, list.width / 2, 80, 20);
+            wait(30);
+            verify(list.contentY > bottom);
+            mouseRelease(list, list.width / 2, 80);
+            tryVerify(() => Math.abs(list.contentY - bottom) < 0.5);
+            compare(launchSpy.count, 0);
+            compare(actionSpy.count, 0);
+
+            search.text = "reboot";
+            tryCompare(search.parent.parent, "height", 129);
+            verify(!list.interactive);
+        }
+
         function test_commandsAndApps() {
             const search = findChild(launcher, "launcherSearch");
             const aliases = ["shutdown", "reboot", "suspend", "security", "preferences"];
