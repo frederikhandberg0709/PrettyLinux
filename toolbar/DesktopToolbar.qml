@@ -11,7 +11,6 @@ Item {
 
     property Item backdrop: null
     property bool menuBar: false
-    property string searchShortcut: ""
     property alias searchButton: searchPill
     property bool wifiOn: true
     property bool bluetoothOn: false
@@ -51,11 +50,20 @@ Item {
         anchors.fill: parent
         visible: toolbar.menuBar
         radius: 0
+        borderWidth: 0
         backdrop: toolbar.backdrop
         sampleOrigin: Qt.point(toolbar.x - (toolbar.backdrop?.x ?? 0),
                                toolbar.y - (toolbar.backdrop?.y ?? 0))
         tintOpacity: 0.64
         fallbackOpacity: 0.82
+
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            height: 1
+            color: Qt.rgba(1, 1, 1, 0.18)
+        }
     }
 
     Timer {
@@ -134,18 +142,16 @@ Item {
 
         objectName: "toolbarSearch"
         x: toolbar.menuBar ? systemPill.x + systemPill.width + 4 : 0
+        width: height
+        leftPadding: 0
+        rightPadding: 0
         Accessible.name: "Search applications"
         onClicked: toolbar.searchRequested()
 
-        contentItem: RowLayout {
-            spacing: 8
-
-            ToolbarGlyph { symbol: "search"; color: toolbar.accent }
-            PillText { text: "Search" }
-            KeyCap {
-                label: toolbar.searchShortcut
-                visible: !toolbar.compact && label.length > 0
-                hovered: searchPill.hovered
+        contentItem: Item {
+            ToolbarGlyph {
+                anchors.centerIn: parent
+                symbol: "search"
             }
         }
     }
@@ -243,6 +249,53 @@ Item {
                 size: 17
             }
         }
+    }
+
+    component HoverTooltip: GlassSurface {
+        id: tooltip
+        required property Button trigger
+        required property string label
+
+        x: Math.max(4 - toolbar.x, Math.min(toolbar.width + toolbar.x - width - 4,
+                                          trigger.x + (trigger.width - width) / 2))
+        y: toolbar.height + 4 + 4 * opacity
+        z: 10
+        width: tooltipLabel.implicitWidth + 20
+        height: tooltipLabel.implicitHeight + 10
+        backdrop: toolbar.backdrop
+        sampleOrigin: Qt.point(toolbar.x + x - (toolbar.backdrop?.x ?? 0),
+                               toolbar.y + y - (toolbar.backdrop?.y ?? 0))
+        tintOpacity: 0.60
+        fallbackOpacity: 0.94
+        opacity: trigger.hovered && trigger.enabled && !trigger.down && !panel.visible ? 1 : 0
+        visible: opacity > 0
+        Accessible.ignored: true
+
+        Behavior on opacity {
+            NumberAnimation { duration: 130; easing.type: Easing.OutCubic }
+        }
+
+        Text {
+            id: tooltipLabel
+            anchors.centerIn: parent
+            text: tooltip.label
+            textFormat: Text.PlainText
+            color: "#f5f8ff"
+            font.pixelSize: 13
+            font.weight: Font.Medium
+        }
+    }
+
+    HoverTooltip {
+        objectName: "searchTooltip"
+        trigger: searchPill
+        label: "Search"
+    }
+
+    HoverTooltip {
+        objectName: "windowsTooltip"
+        trigger: windowsPill
+        label: "Switch windows"
     }
 
     Popup {

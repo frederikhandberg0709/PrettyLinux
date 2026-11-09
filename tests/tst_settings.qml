@@ -47,9 +47,12 @@ Item {
             compare(dock.anchors.bottomMargin, 28);
             verify(findChild(content, "toolbarGapControl").visible);
 
-            const style = findChild(content, "toolbarStyleControl");
-            style.currentIndex = 1;
-            style.activated(1);
+            const menuBarOption = findChild(content, "menuBarOption");
+            const floatingPillsOption = findChild(content, "floatingPillsOption");
+            verify(floatingPillsOption.checked);
+            menuBarOption.clicked();
+            verify(menuBarOption.checked);
+            verify(!floatingPillsOption.checked);
             compare(toolbar.menuBar, true);
             compare(toolbar.y, 0);
             compare(toolbar.x, 0);
@@ -65,14 +68,14 @@ Item {
             tryCompare(toolbarPanel, "opened", true);
             verify(toolbarPanel.x >= 0);
             verify(toolbarPanel.x + toolbarPanel.width <= toolbar.width);
-            style.currentIndex = 0;
-            style.activated(0);
+            floatingPillsOption.clicked();
+            verify(floatingPillsOption.checked);
+            verify(!menuBarOption.checked);
             tryCompare(toolbarPanel, "visible", false);
             compare(toolbar.y, 8);
             compare(toolbar.x, 16);
             compare(toolbar.height, 34);
-            style.currentIndex = 1;
-            style.activated(1);
+            menuBarOption.clicked();
             tryCompare(system, "x", 8);
             compare(system.width, 30);
             compare(clock.x + clock.width, toolbar.width - 12);

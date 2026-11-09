@@ -1,6 +1,6 @@
 # Agent context
 
-This workspace contains a Qt Quick prototype for a floating desktop dock. The macOS preview is the local design and interaction test bed. The intended Linux deployment is a Quickshell panel on Wayland. The app entries are mocks and activation emits `launched` and logs the app name.
+This workspace contains a Qt Quick prototype for a floating desktop dock. The standalone preview is the local design and interaction test bed. The intended Linux deployment is a Quickshell panel on Wayland. The app entries are mocks and activation emits `launched` and logs the app name.
 
 ## Design language
 

@@ -286,7 +286,6 @@ Window {
         anchors.leftMargin: menuBar ? 0 : 16
         anchors.rightMargin: menuBar ? 0 : 16
         backdrop: wallpaper
-        searchShortcut: launcherShortcut.nativeText
         visible: !preview.locked
         enabled: !launcher.opened && !switcher.opened && !preview.locked
         onSearchRequested: preview.openLauncher(searchButton)

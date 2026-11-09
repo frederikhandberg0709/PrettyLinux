@@ -11,6 +11,7 @@ Item {
     property real radius: height / 2
     property real tintOpacity: 0.48
     property real fallbackOpacity: 0.65
+    property real borderWidth: 1
 
     Loader {
         id: blur
@@ -70,7 +71,7 @@ Item {
         anchors.fill: parent
         radius: glass.radius
         color: Qt.rgba(0.12, 0.12, 0.15, blur.active ? glass.tintOpacity : glass.fallbackOpacity)
-        border.width: 1
+        border.width: glass.borderWidth
         border.color: Qt.rgba(1, 1, 1, 0.18)
     }
 }

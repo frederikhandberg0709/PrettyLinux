@@ -112,22 +112,49 @@ ScrollView {
         }
     }
 
+    component ToolbarOption: RadioButton {
+        id: option
+        required property string styleValue
+        checked: settings.preferences.toolbarStyle === styleValue
+        onClicked: settings.preferences.toolbarStyle = styleValue
+        implicitHeight: 34
+        leftPadding: 14
+        rightPadding: 14
+        hoverEnabled: true
+        indicator: null
+        contentItem: Text {
+            text: option.text
+            font.pixelSize: 13
+            color: option.checked ? "#171521" : "#e1e2ef"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
+        background: Rectangle {
+            radius: 7
+            color: option.checked ? "#b8a2ef" : option.hovered ? "#444657" : "#343646"
+            border.width: option.visualFocus ? 1 : 0
+            border.color: "#f1f0fa"
+        }
+    }
+
     ColumnLayout {
         width: settings.availableWidth
         spacing: 12
 
         Heading { text: "Toolbar" }
-        Label { text: "Appearance"; color: "#e1e2ef"; font.pixelSize: 13 }
-        ComboBox {
-            id: toolbarStyleControl
-            objectName: "toolbarStyleControl"
-            Layout.fillWidth: true
-            model: ["Floating Pills", "Menu Bar"]
-            currentIndex: settings.preferences.toolbarStyle === "menuBar" ? 1 : 0
-            Accessible.name: "Toolbar appearance"
-            onActivated: settings.preferences.toolbarStyle = currentIndex === 1 ? "menuBar" : "pills"
+        RowLayout {
+            spacing: 4
+            ToolbarOption {
+                objectName: "floatingPillsOption"
+                text: "Floating Pills"
+                styleValue: "pills"
+            }
+            ToolbarOption {
+                objectName: "menuBarOption"
+                text: "Menu Bar"
+                styleValue: "menuBar"
+            }
         }
-        Hint { text: "Menu Bar places a continuous, macOS-inspired glass bar along the top edge." }
         Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: "#24ffffff" }
         Heading { text: "Dock" }
         ValueSlider {
