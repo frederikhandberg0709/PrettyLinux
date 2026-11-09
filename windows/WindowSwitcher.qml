@@ -1,7 +1,6 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Controls.Basic
 import Qt5Compat.GraphicalEffects
 import "../shared"
 
@@ -152,7 +151,6 @@ FocusScope {
             boundsBehavior: Flickable.StopAtBounds
             highlightMoveDuration: 120
             keyNavigationEnabled: false
-            ScrollBar.horizontal: ScrollBar { policy: ScrollBar.AsNeeded }
 
             delegate: Rectangle {
                 id: card
@@ -160,7 +158,7 @@ FocusScope {
                 required property int index
                 readonly property bool selected: index === switcher.selectedIndex
                 width: Math.min(264, list.width > 760 ? (list.width - 30) / 4 : list.width - 12)
-                height: list.height - 9
+                height: list.height
                 radius: 14
                 color: selected ? "#34405f" : hover.hovered ? "#252e43" : "#171e2d"
                 border.color: selected ? "#ad9ce3" : "#25ffffff"

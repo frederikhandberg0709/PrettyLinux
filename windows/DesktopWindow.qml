@@ -9,6 +9,7 @@ Rectangle {
 
     required property var windowData
     property bool active: false
+    property Component customContent: null
     signal activated()
     signal closeRequested()
     signal newRequested()
@@ -66,6 +67,7 @@ Rectangle {
             spacing: 3
 
             Button {
+                visible: !window.customContent
                 text: "+"
                 width: 28
                 height: 28
@@ -84,6 +86,7 @@ Rectangle {
 
     Item {
         id: body
+        visible: !window.customContent
         anchors.top: titlebar.bottom
         anchors.bottom: parent.bottom
         anchors.left: parent.left
@@ -173,5 +176,14 @@ Rectangle {
                 onActiveFocusChanged: if (activeFocus) window.activated()
             }
         }
+    }
+
+    Loader {
+        anchors.top: titlebar.bottom
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.margins: 18
+        sourceComponent: window.customContent
     }
 }

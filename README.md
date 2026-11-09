@@ -15,6 +15,8 @@ The top toolbar has four glass pills:
 - **Control Center** shows Wi-Fi, volume, and battery at a glance. Open it to toggle Wi-Fi or Bluetooth, adjust volume and brightness, and see the battery percentage.
 - **System** contains Settings, Lock, Sleep, Restart, and Shut Down.
 
+**System → Settings** opens a draggable settings window. Adjust the dock height and toggle app magnification. Toolbar and dock edge gaps share a 16 px default; enable **Adjust gaps independently** to set the top and bottom gaps separately. Changes apply immediately and persist across preview launches. **Reset defaults** restores the initial values. Settings participates in the window switcher, and opening it again brings the existing window forward.
+
 Press Esc or click outside an open panel to dismiss it. Pressing the search shortcut again also closes search.
 
 Move search by dragging the empty space around the search field or the Applications heading. It snaps to the desktop’s vertical center line when close, stays inside the desktop, and remembers its position while the preview is running.

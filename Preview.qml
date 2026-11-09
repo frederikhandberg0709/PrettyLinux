@@ -8,6 +8,7 @@ import "toolbar"
 import "login"
 import "windows"
 import "shared"
+import "settings"
 
 Window {
     id: preview
@@ -22,6 +23,29 @@ Window {
 
     property Item previousFocus: null
     property bool locked: true
+    property alias settingsLocation: desktopPreferences.location
+
+    DesktopSettings { id: desktopPreferences; objectName: "desktopSettings" }
+
+    function openSettings() {
+        switcher.cancel();
+        toolbar.closePanel();
+        launcher.opened = false;
+        for (let i = 0; i < windowStore.entries.count; ++i) {
+            const entry = windowStore.entries.get(i);
+            if (entry.app.name === "Settings") {
+                windowStore.activate(entry.windowId);
+                return;
+            }
+        }
+        windowStore.createWindow({ name: "Settings", accent: "#7654ce",
+            path: "M 12 8 A 4 4 0 1 1 12 16 A 4 4 0 1 1 12 8 Z M 12 3 V 5 M 12 19 V 21 M 3 12 H 5 M 19 12 H 21 M 5.6 5.6 L 7 7 M 17 17 L 18.4 18.4 M 5.6 18.4 L 7 17 M 17 7 L 18.4 5.6" }, "Settings");
+    }
+
+    Component {
+        id: settingsContent
+        SettingsContent { objectName: "settingsContent"; preferences: desktopPreferences }
+    }
 
     function lockScreen() {
         switcher.cancel();
@@ -189,9 +213,10 @@ Window {
 
     Item {
         id: desktop
+        objectName: "desktop"
         anchors.fill: parent
-        anchors.topMargin: 64
-        anchors.bottomMargin: 106
+        anchors.topMargin: toolbar.y + toolbar.height + 16
+        anchors.bottomMargin: desktopPreferences.dockGap + dock.height + 14
         visible: !preview.locked
         enabled: !launcher.opened && !switcher.opened && !preview.locked
 
@@ -217,11 +242,12 @@ Window {
                 required property int ordinal
                 windowData: ({ windowId: windowId, app: app, title: title, ordinal: ordinal })
                 width: Math.min(580, desktop.width - 32)
-                height: Math.min(350, desktop.height - 12)
+                height: Math.min(app.name === "Settings" ? 510 : 350, desktop.height - 12)
                 x: Math.max(0, Math.min(desktop.width - width, (desktop.width - width) / 2 + (ordinal % 4 - 1.5) * 36))
                 y: Math.max(0, Math.min(desktop.height - height, (ordinal % 4) * 13))
                 z: windowStore.recentIds.length - windowStore.recentIds.indexOf(windowId)
                 active: windowStore.activeId === windowId
+                customContent: app.name === "Settings" ? settingsContent : null
                 onActivated: windowStore.activate(windowId)
                 onCloseRequested: windowStore.closeWindow(windowId)
                 onNewRequested: windowStore.createWindow(app, "")
@@ -231,24 +257,31 @@ Window {
 
     Dock {
         id: dock
+        objectName: "dock"
 
         applications: catalog.entries.map(app => Object.assign({}, app, { running: windowStore.isRunning(app.name) }))
         backdrop: wallpaper
+        plateHeight: desktopPreferences.dockHeight
+        baseIconSize: Math.min(plateHeight - topPadding - bottomPadding - indicatorSpace,
+                               (preview.width - 32 - 2 * horizontalPadding - (applications.length - 1) * iconSpacing)
+                               / Math.max(1, applications.length))
+        magnificationEnabled: desktopPreferences.magnificationEnabled
         visible: !preview.locked
         enabled: !launcher.opened && !switcher.opened && !preview.locked
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: 16
+        anchors.bottomMargin: desktopPreferences.dockGap
         onLaunched: appData => windowStore.createWindow(appData, "")
     }
 
     DesktopToolbar {
         id: toolbar
+        objectName: "toolbar"
 
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.topMargin: 14
+        anchors.topMargin: desktopPreferences.effectiveToolbarGap
         anchors.leftMargin: 16
         anchors.rightMargin: 16
         backdrop: wallpaper
@@ -260,6 +293,8 @@ Window {
         onSystemAction: action => {
             if (action === "lock")
                 preview.lockScreen();
+            else if (action === "settings")
+                preview.openSettings();
             else
                 console.log("System action:", action);
         }

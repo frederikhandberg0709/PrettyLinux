@@ -11,11 +11,13 @@ Item {
     property Item backdrop: null
     property real baseIconSize: 48
     property real maximumScale: 1.5
+    property bool magnificationEnabled: true
     property real iconSpacing: 8
     property real horizontalPadding: 12
     property real topPadding: 10
     property real bottomPadding: 7
     property real indicatorSpace: 11
+    property real plateHeight: baseIconSize + indicatorSpace + topPadding + bottomPadding
     property var applications: catalog.entries
 
     signal launched(var appData)
@@ -24,7 +26,7 @@ Item {
 
     anchors.alignWhenCentered: false
     implicitWidth: applications.length ? icons.width + 2 * horizontalPadding : 0
-    implicitHeight: applications.length ? baseIconSize + indicatorSpace + topPadding + bottomPadding : 0
+    implicitHeight: applications.length ? plateHeight : 0
 
     readonly property real focusIndex: {
         if (!hover.hovered)
@@ -37,6 +39,8 @@ Item {
     }
 
     function scaleAtDistance(distance: real): real {
+        if (!magnificationEnabled)
+            return 1;
         const d = Math.abs(distance);
         // A compact cosine wave is flat at its peak and meets the baseline smoothly.
         return d >= 2 ? 1 : 1 + (maximumScale - 1) * (1 + Math.cos(Math.PI * d / 2)) / 2;
