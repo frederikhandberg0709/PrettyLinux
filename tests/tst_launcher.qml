@@ -40,14 +40,14 @@ Item {
             mouseMove(list, list.width / 2, 150, 20);
             mouseMove(list, list.width / 2, 180, 20);
             wait(30);
-            verify(list.contentY < list.originY);
+            verify(list.contentY < list.originY - list.topMargin);
             mouseRelease(list, list.width / 2, 180);
-            tryVerify(() => Math.abs(list.contentY - list.originY) < 0.5);
+            tryVerify(() => Math.abs(list.contentY - (list.originY - list.topMargin)) < 0.5);
             compare(launchSpy.count, 0);
             compare(actionSpy.count, 0);
 
             list.positionViewAtEnd();
-            const bottom = list.originY + list.contentHeight - list.height;
+            const bottom = list.originY + list.contentHeight + list.bottomMargin - list.height;
             mousePress(list, list.width / 2, 200);
             mouseMove(list, list.width / 2, 170, 20);
             mouseMove(list, list.width / 2, 110, 20);
@@ -62,6 +62,35 @@ Item {
             search.text = "reboot";
             tryCompare(search.parent.parent, "height", 129);
             verify(!list.interactive);
+        }
+
+        function test_edgeHitAreaAndFades() {
+            const list = findChild(launcher, "launcherResults");
+            const search = findChild(launcher, "launcherSearch");
+            const panel = search.parent.parent;
+            tryCompare(panel, "opacity", 1);
+            tryCompare(panel, "height", 444);
+            compare(list.x, 0);
+            compare(list.width, panel.width);
+            compare(list.y + list.height, panel.height);
+            list.positionViewAtBeginning();
+            tryCompare(list, "leadingFade", 0);
+            tryCompare(list, "trailingFade", 1);
+            launcher.selectedIndex = launcher.results.length - 1;
+            list.positionViewAtEnd();
+            tryCompare(list, "leadingFade", 1);
+            tryCompare(list, "trailingFade", 0);
+
+            search.text = "web";
+            tryCompare(panel, "height", 129);
+            tryCompare(list, "leadingFade", 0);
+            tryCompare(list, "trailingFade", 0);
+            // Both side gutters belong to the row, though its visuals are inset.
+            mouseClick(list, 2, list.topMargin + 20);
+            compare(launchSpy.count, 1);
+            mouseClick(list, list.width - 2, list.topMargin + 20);
+            compare(launchSpy.count, 2);
+            compare(dismissSpy.count, 2);
         }
 
         function test_commandsAndApps() {

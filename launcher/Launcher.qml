@@ -353,18 +353,24 @@ Item {
 
             property Item hoveredRow: null
             property Item pressedRow: null
+            property real leadingFade: contentY > originY + 0.5 ? 1 : 0
+            property real trailingFade: contentY + height < originY + contentHeight - 0.5 ? 1 : 0
+
+            Behavior on leadingFade { NumberAnimation { duration: 120 } }
+            Behavior on trailingFade { NumberAnimation { duration: 120 } }
 
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: searchHeader.bottom
-            anchors.topMargin: 8
             anchors.bottom: parent.bottom
-            anchors.leftMargin: 11
-            anchors.rightMargin: 11
-            anchors.bottomMargin: 12
+            // Content padding stays inside the scrollable hit area.
+            topMargin: 8
+            bottomMargin: 12
             clip: true
-            // Keep the icon glyphs inside the viewport during software scrolling.
-            layer.enabled: interactive && GraphicsInfo.api === GraphicsInfo.Software
+            // Fade content alpha to reveal the glass, as in the window switcher.
+            // The software layer retains clipping but cannot apply shader masks.
+            layer.enabled: GraphicsInfo.api !== GraphicsInfo.Software || interactive
+            layer.effect: OpacityMask { maskSource: edgeMask }
             boundsBehavior: Flickable.DragAndOvershootBounds
             boundsMovement: Flickable.FollowBoundsBehavior
             rebound: Transition {
@@ -374,7 +380,7 @@ Item {
                     easing.type: Easing.OutCubic
                 }
             }
-            interactive: contentHeight > height
+            interactive: contentHeight + topMargin + bottomMargin > height + 0.5
             keyNavigationEnabled: false
             currentIndex: launcher.selectedIndex
             model: launcher.results
@@ -394,6 +400,8 @@ Item {
                                                     && list.hoveredRow === list.currentItem
 
                     anchors.fill: parent
+                    anchors.leftMargin: 11
+                    anchors.rightMargin: 11 + (list.interactive ? 9 : 0)
                     anchors.bottomMargin: 3
                     radius: 9
                     color: pressed ? "#779b7cf3"
@@ -413,6 +421,10 @@ Item {
 
             ScrollBar.vertical: ScrollBar {
                 policy: ScrollBar.AsNeeded
+                parent: list.parent
+                x: list.x + list.width - width - 11
+                y: list.y + 8
+                height: list.height - 20
             }
 
             delegate: Item {
@@ -423,7 +435,7 @@ Item {
                 readonly property bool selected: index === launcher.selectedIndex
                 readonly property bool pressed: rowTap.pressed
 
-                width: list.width - (list.interactive ? 9 : 0)
+                width: list.width
                 height: 43
                 Accessible.role: Accessible.Button
                 Accessible.name: modelData.name
@@ -431,86 +443,92 @@ Item {
                 Accessible.selected: selected
                 Accessible.onPressAction: launcher.activate(index)
 
-                Rectangle {
-                    anchors.fill: parent
-                    anchors.bottomMargin: 3
-                    radius: 9
-                    color: "white"
-                    opacity: entry.selected ? 0
-                                            : entry.pressed ? 42 / 255
-                                                            : rowHover.hovered ? 19 / 255 : 0
-
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: entry.pressed ? 70 : 120
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-                }
-
-                AppTile {
-                    id: icon
-
-                    anchors.left: parent.left
-                    anchors.leftMargin: 11
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.verticalCenterOffset: -1.5
-                    width: 28
-                    height: width
-                    appData: entry.modelData
-                }
-
-                Column {
-                    anchors.left: icon.right
-                    anchors.leftMargin: 11
-                    anchors.right: status.left
-                    anchors.rightMargin: 12
-                    anchors.verticalCenter: icon.verticalCenter
-                    spacing: 1
-
-                    Text {
-                        width: parent.width
-                        text: entry.modelData.name
-                        textFormat: Text.PlainText
-                        elide: Text.ElideRight
-                        color: "#f6f6ff"
-                        font.pixelSize: 13
-                        font.weight: Font.DemiBold
-                        Accessible.ignored: true
-                    }
-
-                    Text {
-                        width: parent.width
-                        text: entry.modelData.description || ""
-                        textFormat: Text.PlainText
-                        elide: Text.ElideRight
-                        color: "#b7bad0"
-                        font.pixelSize: 11
-                        Accessible.ignored: true
-                    }
-                }
-
-                Row {
-                    id: status
-
-                    anchors.right: parent.right
-                    anchors.rightMargin: 12
-                    anchors.verticalCenter: icon.verticalCenter
-                    spacing: 6
-                    visible: !!entry.modelData.running
+                Item {
+                    x: 11
+                    width: entry.width - 22 - (list.interactive ? 9 : 0)
+                    height: entry.height
 
                     Rectangle {
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 5
-                        height: width
-                        radius: width / 2
-                        color: "#91dfb6"
+                        anchors.fill: parent
+                        anchors.bottomMargin: 3
+                        radius: 9
+                        color: "white"
+                        opacity: entry.selected ? 0
+                                                : entry.pressed ? 42 / 255
+                                                                : rowHover.hovered ? 19 / 255 : 0
+
+                        Behavior on opacity {
+                            NumberAnimation {
+                                duration: entry.pressed ? 70 : 120
+                                easing.type: Easing.OutCubic
+                            }
+                        }
                     }
 
-                    Text {
-                        text: "Running"
-                        color: "#bdc7d4"
-                        font.pixelSize: 11
+                    AppTile {
+                        id: icon
+
+                        anchors.left: parent.left
+                        anchors.leftMargin: 11
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.verticalCenterOffset: -1.5
+                        width: 28
+                        height: width
+                        appData: entry.modelData
+                    }
+
+                    Column {
+                        anchors.left: icon.right
+                        anchors.leftMargin: 11
+                        anchors.right: status.left
+                        anchors.rightMargin: 12
+                        anchors.verticalCenter: icon.verticalCenter
+                        spacing: 1
+
+                        Text {
+                            width: parent.width
+                            text: entry.modelData.name
+                            textFormat: Text.PlainText
+                            elide: Text.ElideRight
+                            color: "#f6f6ff"
+                            font.pixelSize: 13
+                            font.weight: Font.DemiBold
+                            Accessible.ignored: true
+                        }
+
+                        Text {
+                            width: parent.width
+                            text: entry.modelData.description || ""
+                            textFormat: Text.PlainText
+                            elide: Text.ElideRight
+                            color: "#b7bad0"
+                            font.pixelSize: 11
+                            Accessible.ignored: true
+                        }
+                    }
+
+                    Row {
+                        id: status
+
+                        anchors.right: parent.right
+                        anchors.rightMargin: 12
+                        anchors.verticalCenter: icon.verticalCenter
+                        spacing: 6
+                        visible: !!entry.modelData.running
+
+                        Rectangle {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 5
+                            height: width
+                            radius: width / 2
+                            color: "#91dfb6"
+                        }
+
+                        Text {
+                            text: "Running"
+                            color: "#bdc7d4"
+                            font.pixelSize: 11
+                        }
                     }
                 }
 
@@ -537,6 +555,20 @@ Item {
                     }
                     onTapped: launcher.activate(entry.index)
                 }
+            }
+        }
+
+        Rectangle {
+            id: edgeMask
+            width: list.width
+            height: list.height
+            visible: false
+            layer.enabled: true
+            gradient: Gradient {
+                GradientStop { position: 0; color: Qt.rgba(1, 1, 1, 1 - list.leadingFade) }
+                GradientStop { position: Math.min(0.5, 40 / edgeMask.height); color: "white" }
+                GradientStop { position: Math.max(0.5, 1 - 40 / edgeMask.height); color: "white" }
+                GradientStop { position: 1; color: Qt.rgba(1, 1, 1, 1 - list.trailingFade) }
             }
         }
 
