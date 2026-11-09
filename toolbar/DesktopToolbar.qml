@@ -16,6 +16,7 @@ Item {
     property bool bluetoothOn: false
     property int volume: 62
     property int brightness: 75
+    property int keyboardBrightness: 50
     property int battery: 82
     readonly property bool compact: width < 650
     readonly property color foreground: "#f1f0fa"
@@ -360,13 +361,6 @@ Item {
         contentItem: Loader { sourceComponent: panel.body }
     }
 
-    component PanelTitle: Text {
-        color: toolbar.foreground
-        font.pixelSize: 15
-        font.weight: Font.DemiBold
-        Accessible.role: Accessible.Heading
-    }
-
     component Rule: Rectangle {
         Layout.fillWidth: true
         implicitHeight: 1
@@ -493,8 +487,6 @@ Item {
         ColumnLayout {
             spacing: 11
 
-            PanelTitle { text: "Control Center" }
-
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 8
@@ -533,6 +525,13 @@ Item {
                 value: toolbar.brightness
                 onMoved: value => toolbar.brightness = value
             }
+            LevelControl {
+                Layout.fillWidth: true
+                label: "Keyboard Brightness"
+                symbol: "keyboardBrightness"
+                value: toolbar.keyboardBrightness
+                onMoved: value => toolbar.keyboardBrightness = value
+            }
 
             Rule {}
 
@@ -552,12 +551,6 @@ Item {
 
         ColumnLayout {
             spacing: 4
-
-            PanelTitle {
-                Layout.leftMargin: 7
-                Layout.bottomMargin: 5
-                text: "System"
-            }
 
             Repeater {
                 model: [
