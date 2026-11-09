@@ -371,10 +371,10 @@ Item {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: resultHeading.bottom
-            anchors.bottom: keyboardHints.top
+            anchors.bottom: parent.bottom
             anchors.leftMargin: 11
             anchors.rightMargin: 11
-            anchors.bottomMargin: 4
+            anchors.bottomMargin: 12
             clip: true
             // Keep the icon glyphs inside the viewport during software scrolling.
             layer.enabled: interactive && GraphicsInfo.api === GraphicsInfo.Software
@@ -567,57 +567,5 @@ Item {
             }
         }
 
-        Item {
-            id: keyboardHints
-
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
-            height: 40
-
-            Rectangle {
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.margins: 12
-                y: 0
-                height: 1
-                color: "#19ffffff"
-            }
-
-            Row {
-                anchors.left: parent.left
-                anchors.leftMargin: 22
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 6
-                opacity: launcher.results.length ? 1 : 0.5
-
-                KeyCap { label: "↑" }
-                KeyCap { label: "↓" }
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "Navigate"
-                    color: "#bec3d6"
-                    font.pixelSize: 11
-                }
-            }
-
-            Row {
-                anchors.right: parent.right
-                anchors.rightMargin: 22
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 6
-                opacity: launcher.results.length ? 1 : 0.5
-
-                KeyCap { label: "↵" }
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "Open app"
-                    color: "#e2d9fc"
-                    font.pixelSize: 11
-                }
-            }
-        }
     }
 }
