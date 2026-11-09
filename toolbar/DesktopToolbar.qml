@@ -475,7 +475,6 @@ Item {
                     if (editing && acceptableInput) {
                         level.moved(Math.min(100, Number(text)));
                         editing = false;
-                        deselect();
                     }
                 }
 
@@ -484,6 +483,7 @@ Item {
                 padding: 4
                 text: editing ? draft : level.value + "%"
                 readOnly: !editing
+                cursorVisible: editing && activeFocus
                 hoverEnabled: true
                 selectByMouse: editing
                 horizontalAlignment: TextInput.AlignRight
@@ -494,13 +494,13 @@ Item {
                 validator: RegularExpressionValidator { regularExpression: /[0-9]+/ }
                 Accessible.name: level.label + " percentage"
                 onTextEdited: draft = text
+                onEditingChanged: if (!editing) deselect()
                 onActiveFocusChanged: if (!activeFocus) editing = false
                 Keys.onReturnPressed: editing ? commit() : beginEditing()
                 Keys.onEnterPressed: editing ? commit() : beginEditing()
                 Keys.onEscapePressed: event => {
                     if (editing) {
                         editing = false;
-                        deselect();
                     } else {
                         event.accepted = false;
                     }
@@ -515,7 +515,7 @@ Item {
                 background: Rectangle {
                     radius: 5
                     color: percentage.hovered || percentage.editing ? "#1affffff" : "transparent"
-                    border.color: percentage.activeFocus ? "#66c6b8ff" : "transparent"
+                    border.color: percentage.editing ? "#66c6b8ff" : "transparent"
                 }
 
                 MouseArea {

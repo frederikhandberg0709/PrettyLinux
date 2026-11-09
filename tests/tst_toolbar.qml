@@ -52,6 +52,7 @@ Item {
             compare(field.text, "42%");
             verify(field.readOnly);
             compare(pointer.cursorShape, Qt.PointingHandCursor);
+            compare(field.background.border.color, Qt.color("transparent"));
 
             mouseClick(field);
             keyClick(Qt.Key_Backspace);
@@ -60,6 +61,7 @@ Item {
             compare(toolbar[data.property], 42);
             keyClick(Qt.Key_Escape);
             compare(field.text, "42%");
+            compare(field.background.border.color, Qt.color("transparent"));
             verify(panel.opened);
 
             mouseClick(field);
@@ -67,6 +69,9 @@ Item {
             const other = findChild(toolbar, data.label === "display" ? "volumePercentage" : "displayPercentage");
             mouseClick(other);
             verify(!field.editing);
+            compare(field.background.border.color, Qt.color("transparent"));
+            compare(field.selectedText, "");
+            verify(!field.cursorVisible);
             compare(toolbar[data.property], 42);
             mouseClick(field);
             keyClick(Qt.Key_1);
