@@ -9,6 +9,7 @@ import "login"
 import "windows"
 import "shared"
 import "settings"
+import "audio"
 
 Window {
     id: preview
@@ -26,8 +27,19 @@ Window {
     property alias settingsLocation: desktopPreferences.location
 
     DesktopSettings { id: desktopPreferences; objectName: "desktopSettings" }
+    AudioState { id: audioState; objectName: "audioState" }
+
+    property int settingsPage: 0
+
+    function openSoundSettings(appIndex: int) {
+        if (appIndex >= 0)
+            audioState.editingApp = appIndex;
+        openSettings();
+        settingsPage = 1;
+    }
 
     function openSettings() {
+        settingsPage = 0;
         switcher.cancel();
         toolbar.closePanel();
         launcher.opened = false;
@@ -44,7 +56,13 @@ Window {
 
     Component {
         id: settingsContent
-        SettingsContent { objectName: "settingsContent"; preferences: desktopPreferences }
+        SettingsContent {
+            objectName: "settingsContent"
+            preferences: desktopPreferences
+            audio: audioState
+            page: preview.settingsPage
+            onPageRequested: page => preview.settingsPage = page
+        }
     }
 
     function lockScreen() {
@@ -297,6 +315,14 @@ Window {
         backdrop: wallpaper
         visible: !preview.locked
         enabled: !launcher.opened && !switcher.opened && !preview.locked
+        volume: audioState.outputMuted ? 0 : audioState.outputVolume
+        volumeExternallyManaged: true
+        onVolumeMoved: value => {
+            audioState.outputVolume = value;
+            audioState.outputMuted = false;
+        }
+        audio: audioState
+        onSoundSettingsRequested: appIndex => preview.openSoundSettings(appIndex)
         onSearchRequested: preview.openLauncher(searchButton)
         onWindowsRequested: preview.openSwitcher(false, 0)
         onSystemAction: action => preview.performSystemAction(action)

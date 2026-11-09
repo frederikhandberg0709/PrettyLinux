@@ -43,7 +43,7 @@ Item {
             compare(windowsTip.label, "Switch windows");
             mouseMove(toolbar, toolbar.width / 2, 100);
             tryCompare(windowsTip, "opacity", 0);
-            verify(!windowsTip.visible);
+            tryCompare(windowsTip, "visible", false);
         }
     }
 }

@@ -15,6 +15,12 @@ The top toolbar defaults to floating glass pills:
 - **Control Center** shows Wi-Fi, volume, and battery at a glance. Open it to toggle Wi-Fi or Bluetooth, adjust volume and brightness, and see the battery percentage.
 - **System** contains Settings, Lock, Sleep, Restart, and Shut Down.
 
+**Sound** (the speaker button in the toolbar) opens a compact glass mixer popover. Select input and output devices, adjust their levels, and mute either independently. Master output volume stays synchronized with Control Center. Music, Browser, and Messages each have independent volume, mute, and output routing; **Default output** follows the selected master device. Escape, clicking outside, or clicking the sound button again dismisses the popover.
+
+Choose an app's **EQ** button to expand its ten-band equalizer inline (32 Hz–16 kHz, ±12 dB), with bypass and Flat/Bass boost/Voice/Bright presets. Click again to collapse, or choose another app to switch. **Custom curves & preamp** opens that app under **Settings → Sound**, with preamp, reset, and named custom curve saving/loading. Saving an existing name replaces that app's curve. Audio settings and saved curves survive closing the popover for the current preview session. Smaller screens scroll the popover; opening it never creates a desktop window.
+
+`audio/` contains the mixer and its shared state. Devices and sessions are mock data; controls do not alter host audio. Linux deployment needs a PipeWire/WirePlumber backend for device and stream discovery, volume, mute, routing, and meters, plus per-app DSP/filter nodes to apply EQ and preamp. The prototype does not process audio.
+
 **System → Settings** opens a draggable settings window. Under **Toolbar**, choose **Floating Pills** or **Menu Bar** using the two-option selector. Menu Bar is a continuous glass bar flush with the top edge, with system and app controls on the left and status and clock on the right. Adjust the dock height and toggle app magnification. Toolbar and dock edge gaps share a 16 px default; enable **Adjust gaps independently** to set the top and bottom gaps separately. Menu Bar ignores the toolbar gap and preserves it for Floating Pills. Changes apply immediately and persist across preview launches. **Reset defaults** restores the initial values. Settings participates in the window switcher, and opening it again brings the existing window forward.
 
 Press Esc or click outside an open panel to dismiss it. Pressing the search shortcut again also closes search.

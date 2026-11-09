@@ -5,6 +5,7 @@ import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
 import "../shared"
+import "../audio"
 
 Item {
     id: toolbar
@@ -15,6 +16,7 @@ Item {
     property bool wifiOn: true
     property bool bluetoothOn: false
     property int volume: 62
+    property bool volumeExternallyManaged: false
     property int brightness: 75
     property int keyboardBrightness: 50
     property int battery: 82
@@ -26,6 +28,9 @@ Item {
 
     signal searchRequested()
     signal windowsRequested()
+    property AudioState audio: null
+    signal soundSettingsRequested(int appIndex)
+    signal volumeMoved(int value)
     signal systemAction(string action)
 
     function closePanel(): Item {
@@ -186,12 +191,14 @@ Item {
             PillText {
                 id: dateLabel
 
+                visible: !toolbar.compact
                 text: Qt.formatDate(toolbar.now, "ddd, MMM d")
                 color: toolbar.muted
             }
             Rectangle {
                 implicitWidth: 1
                 implicitHeight: 12
+                visible: !toolbar.compact
                 color: "#32ffffff"
             }
             PillText {
@@ -218,7 +225,6 @@ Item {
                 symbol: toolbar.wifiOn ? "wifi" : "wifiOff"
                 color: toolbar.wifiOn ? toolbar.foreground : toolbar.muted
             }
-            ToolbarGlyph { symbol: toolbar.volume > 0 ? "volume" : "mute" }
             Rectangle {
                 implicitWidth: 1
                 implicitHeight: 12
@@ -229,6 +235,19 @@ Item {
                 ToolbarGlyph { symbol: "battery"; size: 18 }
                 PillText { text: toolbar.battery + "%" }
             }
+        }
+    }
+
+    Pill {
+        id: soundPill
+        objectName: "toolbarSound"
+        x: controlPill.x - width - (toolbar.menuBar ? 2 : 8)
+        width: height
+        visible: toolbar.audio !== null
+        Accessible.name: "Sound mixer, volume " + toolbar.volume + "%"
+        onClicked: toolbar.togglePanel(soundPill, mixerBody)
+        contentItem: Item {
+            ToolbarGlyph { anchors.centerIn: parent; symbol: toolbar.volume > 0 ? "volume" : "mute" }
         }
     }
 
@@ -313,7 +332,8 @@ Item {
             !trigger ? 0 : trigger === clockPill
                 ? trigger.x + (trigger.width - width) / 2 : trigger.x + trigger.width - width))
         y: toolbar.height + 9 - (1 - opacity) * 8
-        width: trigger === systemPill ? 220 : 292
+        width: Math.min(toolbar.width - 16, body === mixerBody ? 360 : trigger === systemPill ? 220 : 292)
+        height: body === mixerBody ? Math.min(534, (toolbar.parent?.height ?? 600) - toolbar.y - toolbar.height - 24) : implicitHeight
         padding: 14
         focus: true
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
@@ -353,7 +373,7 @@ Item {
                 backdrop: toolbar.backdrop
                 sampleOrigin: Qt.point(toolbar.x + panel.x - (toolbar.backdrop?.x ?? 0),
                                        toolbar.y + panel.y - (toolbar.backdrop?.y ?? 0))
-                tintOpacity: 0.84
+                tintOpacity: panel.body === mixerBody ? 0.94 : 0.84
                 fallbackOpacity: 0.97
             }
         }
@@ -504,6 +524,18 @@ Item {
     }
 
     Component {
+        id: mixerBody
+        QuickMixer {
+            objectName: "quickMixer"
+            audio: toolbar.audio
+            onSettingsRequested: appIndex => {
+                panel.close();
+                toolbar.soundSettingsRequested(appIndex);
+            }
+        }
+    }
+
+    Component {
         id: controlsBody
 
         ColumnLayout {
@@ -538,18 +570,22 @@ Item {
                 label: "Volume"
                 symbol: toolbar.volume > 0 ? "volume" : "mute"
                 value: toolbar.volume
-                onMoved: value => toolbar.volume = value
+                onMoved: value => {
+                    if (!toolbar.volumeExternallyManaged)
+                        toolbar.volume = value;
+                    toolbar.volumeMoved(value);
+                }
             }
             LevelControl {
                 Layout.fillWidth: true
-                label: "Brightness"
+                label: "Display"
                 symbol: "brightness"
                 value: toolbar.brightness
                 onMoved: value => toolbar.brightness = value
             }
             LevelControl {
                 Layout.fillWidth: true
-                label: "Keyboard Brightness"
+                label: "Keyboard"
                 symbol: "keyboardBrightness"
                 value: toolbar.keyboardBrightness
                 onMoved: value => toolbar.keyboardBrightness = value

@@ -14,7 +14,7 @@ FocusScope {
     property bool locked: true
     property date now: new Date()
     property string statusMessage: ""
-    signal unlocked()
+    signal unlocked
     signal systemAction(string action)
 
     visible: locked || opacity > 0
@@ -22,7 +22,12 @@ FocusScope {
     opacity: locked ? 1 : 0
     focus: locked
 
-    Behavior on opacity { NumberAnimation { duration: 280; easing.type: Easing.InOutQuad } }
+    Behavior on opacity {
+        NumberAnimation {
+            duration: 280
+            easing.type: Easing.InOutQuad
+        }
+    }
 
     onLockedChanged: {
         password.clear();
@@ -60,8 +65,14 @@ FocusScope {
     Rectangle {
         anchors.fill: parent
         gradient: Gradient {
-            GradientStop { position: 0; color: "#10121b35" }
-            GradientStop { position: 1; color: "#88111527" }
+            GradientStop {
+                position: 0
+                color: "#10121b35"
+            }
+            GradientStop {
+                position: 1
+                color: "#88111527"
+            }
         }
     }
 
@@ -105,7 +116,7 @@ FocusScope {
             anchors.horizontalCenter: parent.horizontalCenter
             width: login.height >= 480 ? 88 : 72
             height: width
-            source: "Avatar.svg"
+            source: "avatar.png"
             sourceSize: Qt.size(width * 2, height * 2)
             layer.enabled: true
             layer.effect: OpacityMask {
@@ -203,9 +214,21 @@ FocusScope {
 
         Repeater {
             model: [
-                { label: "Sleep", symbol: "sleep", action: "sleep" },
-                { label: "Restart", symbol: "restart", action: "restart" },
-                { label: "Shut Down", symbol: "power", action: "shutdown" }
+                {
+                    label: "Sleep",
+                    symbol: "sleep",
+                    action: "sleep"
+                },
+                {
+                    label: "Restart",
+                    symbol: "restart",
+                    action: "restart"
+                },
+                {
+                    label: "Shut Down",
+                    symbol: "power",
+                    action: "shutdown"
+                }
             ]
 
             delegate: Button {
