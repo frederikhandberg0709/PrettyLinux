@@ -32,11 +32,17 @@ Item {
             const panel = findChild(toolbar, "toolbarPanel");
             tryCompare(panel, "opened", true);
             const field = findChild(toolbar, data.label + "Percentage");
+            const pointer = findChild(field, data.label + "PercentagePointer");
             const original = toolbar[data.property];
             mouseMove(field, field.width / 2, field.height / 2);
             tryCompare(field, "hovered", true);
+            compare(pointer.cursorShape, Qt.PointingHandCursor);
             mouseClick(field);
             verify(field.editing);
+            compare(pointer.cursorShape, Qt.IBeamCursor);
+            compare(pointer.acceptedButtons, Qt.NoButton);
+            mouseMove(field, field.width / 2, field.height / 2);
+            tryCompare(pointer, "containsMouse", true);
             compare(field.selectedText, String(original));
             keyClick(Qt.Key_4);
             keyClick(Qt.Key_2);
@@ -45,6 +51,7 @@ Item {
             compare(toolbar[data.property], 42);
             compare(field.text, "42%");
             verify(field.readOnly);
+            compare(pointer.cursorShape, Qt.PointingHandCursor);
 
             mouseClick(field);
             keyClick(Qt.Key_Backspace);

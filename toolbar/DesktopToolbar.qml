@@ -512,11 +512,6 @@ Item {
                     text: percentage.text
                 }
 
-                HoverHandler {
-                    enabled: percentage.editing
-                    cursorShape: Qt.IBeamCursor
-                }
-
                 background: Rectangle {
                     radius: 5
                     color: percentage.hovered || percentage.editing ? "#1affffff" : "transparent"
@@ -524,9 +519,12 @@ Item {
                 }
 
                 MouseArea {
+                    objectName: percentage.objectName + "Pointer"
                     anchors.fill: parent
-                    enabled: !percentage.editing
-                    cursorShape: Qt.PointingHandCursor
+                    hoverEnabled: true
+                    // Keep cursor ownership while letting the editor receive presses and drags.
+                    acceptedButtons: percentage.editing ? Qt.NoButton : Qt.LeftButton
+                    cursorShape: percentage.editing ? Qt.IBeamCursor : Qt.PointingHandCursor
                     onClicked: percentage.beginEditing()
                 }
             }
