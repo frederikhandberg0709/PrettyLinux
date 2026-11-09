@@ -457,7 +457,79 @@ Item {
 
             ToolbarGlyph { symbol: level.symbol; color: toolbar.muted }
             PillText { text: level.label; Layout.fillWidth: true }
-            PillText { text: level.value + "%"; color: toolbar.muted }
+            TextField {
+                id: percentage
+
+                objectName: level.label.toLowerCase() + "Percentage"
+                property bool editing: false
+                property string draft: ""
+
+                function beginEditing() {
+                    draft = String(level.value);
+                    editing = true;
+                    forceActiveFocus(Qt.MouseFocusReason);
+                    selectAll();
+                }
+
+                function commit() {
+                    if (editing && acceptableInput) {
+                        level.moved(Math.min(100, Number(text)));
+                        editing = false;
+                        deselect();
+                    }
+                }
+
+                implicitWidth: Math.max(18, Math.ceil(percentageMetrics.advanceWidth) + leftPadding + rightPadding)
+                implicitHeight: 24
+                padding: 4
+                text: editing ? draft : level.value + "%"
+                readOnly: !editing
+                hoverEnabled: true
+                selectByMouse: editing
+                horizontalAlignment: TextInput.AlignRight
+                color: editing ? toolbar.foreground : toolbar.muted
+                font.pixelSize: 13
+                selectionColor: toolbar.accent
+                selectedTextColor: "#25213b"
+                validator: RegularExpressionValidator { regularExpression: /[0-9]+/ }
+                Accessible.name: level.label + " percentage"
+                onTextEdited: draft = text
+                onActiveFocusChanged: if (!activeFocus) editing = false
+                Keys.onReturnPressed: editing ? commit() : beginEditing()
+                Keys.onEnterPressed: editing ? commit() : beginEditing()
+                Keys.onEscapePressed: event => {
+                    if (editing) {
+                        editing = false;
+                        deselect();
+                    } else {
+                        event.accepted = false;
+                    }
+                }
+
+                TextMetrics {
+                    id: percentageMetrics
+                    font: percentage.font
+                    text: percentage.text
+                }
+
+                HoverHandler {
+                    enabled: percentage.editing
+                    cursorShape: Qt.IBeamCursor
+                }
+
+                background: Rectangle {
+                    radius: 5
+                    color: percentage.hovered || percentage.editing ? "#1affffff" : "transparent"
+                    border.color: percentage.activeFocus ? "#66c6b8ff" : "transparent"
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    enabled: !percentage.editing
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: percentage.beginEditing()
+                }
+            }
         }
 
         Slider {
